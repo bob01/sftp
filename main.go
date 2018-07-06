@@ -6,18 +6,81 @@ import (
 	"golang.org/x/crypto/ssh"
 	"encoding/hex"
 	"flag"
+	"io/ioutil"
+	"encoding/json"
 )
 
 
+type Conf struct {
+	Addr string `json:"addr"`
+	User string `json:"user"`
+	Password string `json:"password"`
+	Path string `json:"path"`
+	Flags uint `json:"flags"`
+}
+
 func main()  {
 
-	addr := flag.String("addr", "", "Host address <host>[:<port>]")
-	username := flag.String("user", "", "Username")
-	password := flag.String("password", "", "Password")
-	path := flag.String("path", "", "File system object path")
-	flags := flag.Uint("flags", sftp.SSH_FILEXFER_ATTR_SIZE, "Attribute flags")
+	// parse args
+	var conf Conf
+	confFile := flag.String("conf", "", "JSON configuration file")
+
+	addr := flag.String("addr", conf.Addr, "Host address <host>[:<port>]")
+	username := flag.String("user", conf.User, "Username")
+	password := flag.String("password", conf.Password, "Password")
+	path := flag.String("path", conf.Path, "File system object path")
+	flags := flag.Uint("flags", conf.Flags, "Attribute flags")
+
 	flag.Parse()
 
+	// if conf file specified repeat after reading to use conf values as defaults
+	if len(*confFile) != 0 {
+		// read
+		raw, e := ioutil.ReadFile(*confFile)
+		if e != nil {
+			fmt.Println(e)
+			return
+		}
+
+		// unmarshal
+		var config Conf
+		json.Unmarshal(raw, &config)
+
+		// parse again to use conf values as defaults for flag values
+		flag.Parse()
+	}
+
+	// use values from confFile file if provided for args not explicitly specified
+	if len(*confFile) != 0 {
+		// read
+		raw, e := ioutil.ReadFile(*confFile)
+		if e != nil {
+			fmt.Println(e)
+			return
+		}
+
+		// unmarshal
+		var config Conf
+		json.Unmarshal(raw, &config)
+
+		if len(*addr) == 0 {
+			addr = &config.Addr
+		}
+		if len(*username) == 0 {
+			username = &config.User
+		}
+		if len(*password) == 0 {
+			password = &config.Password
+		}
+		if len(*path) == 0 {
+			path = &config.Path
+		}
+		if *flags == 0 {
+			flags = &config.Flags
+		}
+	}
+
+	// open ssh connection
 	config := &ssh.ClientConfig{
 		User: *username,
 		HostKeyCallback:ssh.InsecureIgnoreHostKey(),
@@ -33,6 +96,7 @@ func main()  {
 	}
 	defer conn.Close()
 
+	// open version 6 sftp session
 	client, e := sftp.NewClient(conn)
 	if e != nil {
 		fmt.Println(e)
@@ -40,35 +104,20 @@ func main()  {
 	}
 	defer client.Close()
 
+	// request STAT
 	b, e := client.StatP6(*path, uint32(*flags))
 	if e != nil {
 		fmt.Println(e)
 		return
 	}
 
-	// extra 32 bytes
+	// append 32 bytes
 	extra32 := make([]byte, 32)
 	b = append(b, extra32...)
 
+	// display & parse packet
 	fmt.Printf("%s\n", hex.Dump(b))
 	fmt.Printf("%s", sftp.DumpP6Attrs(b))
 
 	fmt.Println("done.")
 }
-
-
-//infos, e := client.ReadDir(".")
-//if e != nil {
-//	fmt.Println(e)
-//	return
-//}
-//for _, fi := range infos {
-//	fmt.Printf(".name='%v', size=%d, mtime=%v, dir=%v\n", fi.Name(), fi.Size(), fi.ModTime(), fi.IsDir())
-//}
-
-//fi, e := client.Stat("1059.diff")
-//if e != nil {
-//	fmt.Println(e)
-//	return
-//}
-//fmt.Printf("STAT: name='%v', size=%d, mtime=%v, dir=%v\n", fi.Name(), fi.Size(), fi.ModTime(), fi.IsDir())
