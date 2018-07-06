@@ -5,7 +5,7 @@ import (
 	"io"
 	"sync"
 
-	"github.com/pkg/errors"
+	"github.com/bob01/errors"
 )
 
 // conn implements a bidirectional channel on which client and server

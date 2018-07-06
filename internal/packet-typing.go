@@ -3,7 +3,7 @@ package sftp
 import (
 	"encoding"
 
-	"github.com/pkg/errors"
+	"github.com/bob01/errors"
 )
 
 // all incoming packets

@@ -12,7 +12,7 @@ import (
 	"net"
 	"os"
 
-	"github.com/pkg/sftp"
+	"github.com/bob01/sftp"
 	"golang.org/x/crypto/ssh"
 )
 

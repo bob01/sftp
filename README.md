@@ -5,12 +5,12 @@ The `sftp` package provides support for file system operations on remote ssh
 servers using the SFTP subsystem. It also implements an SFTP server for serving
 files from the filesystem.
 
-[![UNIX Build Status](https://travis-ci.org/pkg/sftp.svg?branch=master)](https://travis-ci.org/pkg/sftp) [![GoDoc](http://godoc.org/github.com/pkg/sftp?status.svg)](http://godoc.org/github.com/pkg/sftp)
+[![UNIX Build Status](https://travis-ci.org/bob01/sftp.svg?branch=master)](https://travis-ci.org/bob01/sftp) [![GoDoc](http://godoc.org/github.com/bob01/sftp?status.svg)](http://godoc.org/github.com/bob01/sftp)
 
 usage and examples
 ------------------
 
-See [godoc.org/github.com/pkg/sftp](http://godoc.org/github.com/pkg/sftp) for
+See [godoc.org/github.com/bob01/sftp](http://godoc.org/github.com/bob01/sftp) for
 examples and usage.
 
 The basic operation of the package mirrors the facilities of the

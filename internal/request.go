@@ -9,7 +9,7 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/pkg/errors"
+	"github.com/bob01/errors"
 )
 
 // MaxFilelist is the max number of files to return in a readdir batch.

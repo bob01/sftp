@@ -11,8 +11,9 @@ import (
 	"time"
 
 	"github.com/kr/fs"
-	"github.com/pkg/errors"
+	"github.com/bob01/errors"
 	"golang.org/x/crypto/ssh"
+	"fmt"
 )
 
 // InternalInconsistency indicates the packets sent and the data queued to be
@@ -164,7 +165,7 @@ func (c *Client) Create(path string) (*File, error) {
 	return c.open(path, flags(os.O_RDWR|os.O_CREATE|os.O_TRUNC))
 }
 
-const sftpProtocolVersion = 3 // http://tools.ietf.org/html/draft-ietf-secsh-filexfer-02
+const sftpProtocolVersion = 6 // http://tools.ietf.org/html/draft-ietf-secsh-filexfer-02
 
 func (c *Client) sendInit() error {
 	return c.clientConn.conn.sendPacket(sshFxInitPacket{
@@ -190,6 +191,8 @@ func (c *Client) recvVersion() error {
 	if version != sftpProtocolVersion {
 		return &unexpectedVersionErr{sftpProtocolVersion, version}
 	}
+
+	fmt.Printf("VERSION: %d\n", version)
 
 	return nil
 }
@@ -295,6 +298,30 @@ func (c *Client) Stat(p string) (os.FileInfo, error) {
 		}
 		attr, _ := unmarshalAttrs(data)
 		return fileInfoFromStat(attr, path.Base(p)), nil
+	case ssh_FXP_STATUS:
+		return nil, normaliseError(unmarshalStatus(id, data))
+	default:
+		return nil, unimplementedPacketErr(typ)
+	}
+}
+
+func (c *Client) StatP6(p string, flags uint32) ([]byte, error) {
+	id := c.nextID()
+	typ, data, err := c.sendPacket(sshFxpP6StatPacket{
+		ID:   id,
+		Path: p,
+		Flags:flags,
+	})
+	if err != nil {
+		return nil, err
+	}
+	switch typ {
+	case ssh_FXP_ATTRS:
+		sid, data := unmarshalUint32(data)
+		if sid != id {
+			return nil, &unexpectedIDErr{id, sid}
+		}
+		return data, nil
 	case ssh_FXP_STATUS:
 		return nil, normaliseError(unmarshalStatus(id, data))
 	default:

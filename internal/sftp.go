@@ -5,7 +5,7 @@ package sftp
 import (
 	"fmt"
 
-	"github.com/pkg/errors"
+	"github.com/bob01/errors"
 )
 
 const (

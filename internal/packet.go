@@ -9,7 +9,7 @@ import (
 	"os"
 	"reflect"
 
-	"github.com/pkg/errors"
+	"github.com/bob01/errors"
 )
 
 var (
@@ -74,6 +74,10 @@ func unmarshalUint32(b []byte) (uint32, []byte) {
 	return v, b[4:]
 }
 
+func unmarshalByte(b []byte) (byte, []byte) {
+	return b[0], b[1:]
+}
+
 func unmarshalUint32Safe(b []byte) (uint32, []byte, error) {
 	var v uint32
 	if len(b) < 4 {
@@ -100,6 +104,9 @@ func unmarshalUint64Safe(b []byte) (uint64, []byte, error) {
 
 func unmarshalString(b []byte) (string, []byte) {
 	n, b := unmarshalUint32(b)
+	if int(n) > len(b) {
+		fmt.Printf("** attempting to unmarshal string w/ length: %d (%08X) - crashing...\n", n, n)
+	}
 	return string(b[:n]), b[n:]
 }
 
@@ -249,6 +256,18 @@ func marshalIDString(packetType byte, id uint32, str string) ([]byte, error) {
 	return b, nil
 }
 
+func marshalIDStringFlags(packetType byte, id uint32, str string, flags uint32) ([]byte, error) {
+	l := 1 + 4 + // type(byte) + uint32
+		4 + len(str) + 4
+
+	b := make([]byte, 0, l)
+	b = append(b, packetType)
+	b = marshalUint32(b, id)
+	b = marshalString(b, str)
+	b = marshalUint32(b, flags)
+	return b, nil
+}
+
 func unmarshalIDString(b []byte, id *uint32, str *string) error {
 	var err error
 	*id, b, err = unmarshalUint32Safe(b)
@@ -316,6 +335,22 @@ func (p sshFxpStatPacket) MarshalBinary() ([]byte, error) {
 }
 
 func (p *sshFxpStatPacket) UnmarshalBinary(b []byte) error {
+	return unmarshalIDString(b, &p.ID, &p.Path)
+}
+
+type sshFxpP6StatPacket struct {
+	ID   uint32
+	Path string
+	Flags uint32
+}
+
+func (p sshFxpP6StatPacket) id() uint32 { return p.ID }
+
+func (p sshFxpP6StatPacket) MarshalBinary() ([]byte, error) {
+	return marshalIDStringFlags(ssh_FXP_STAT, p.ID, p.Path, p.Flags)
+}
+
+func (p *sshFxpP6StatPacket) UnmarshalBinary(b []byte) error {
 	return unmarshalIDString(b, &p.ID, &p.Path)
 }
 

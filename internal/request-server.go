@@ -11,7 +11,7 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/pkg/errors"
+	"github.com/bob01/errors"
 )
 
 var maxTxPacket uint32 = 1 << 15
