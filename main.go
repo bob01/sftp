@@ -24,7 +24,7 @@ func main()  {
 
 	// usage
 	flag.Usage = func() {
-		fmt.Fprintln(os.Stderr, "SFTP v6 protocol STAT test v1.0")
+		fmt.Fprintln(os.Stderr, "SFTP v6 protocol STAT test v1.8.0a")
 		flag.PrintDefaults()
 	}
 
