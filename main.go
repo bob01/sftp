@@ -8,6 +8,7 @@ import (
 	"flag"
 	"io/ioutil"
 	"encoding/json"
+	"os"
 )
 
 
@@ -21,9 +22,15 @@ type Conf struct {
 
 func main()  {
 
+	// usage
+	flag.Usage = func() {
+		fmt.Fprintln(os.Stderr, "SFTP v6 protocol STAT test v1.0")
+		flag.PrintDefaults()
+	}
+
 	// parse args
 	var conf Conf
-	confFile := flag.String("conf", "", "JSON configuration file")
+	confFile := flag.String("conf", "", "JSON configuration file eg.\n{\n  \"addr\": \"<host>:<port>\",\n  \"user\": \"username\",\n  \"password\": \"<password>\",\n  \"path\": \"<sftp-object-path>\"\n}")
 
 	addr := flag.String("addr", conf.Addr, "Host address <host>[:<port>]")
 	username := flag.String("user", conf.User, "Username")
